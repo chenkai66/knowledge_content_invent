@@ -1,0 +1,546 @@
+/* App styles - Dark Theme with Light Text */
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a); /* Dark blue gradient background */
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #f8fafc; /* Bright white text */
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: #1e3a8a; /* Deep dark blue background - matching the requested dark blue */
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #e0f2fe; /* Light blue-white text for high contrast */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.app-header p {
+  margin: 0.5rem 0 0 0;
+  color: #cbd5e1; /* Light grey text */
+  font-size: 1rem;
+}
+
+/* Layout container for both sections */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-content-area {
+  display: flex;
+  flex: 1;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2.5rem 1.5rem;
+  gap: 3rem;
+  width: 100%;
+}
+
+/* When there's output content, maximize space for the content */
+.app-content-area.has-output {
+  display: block; /* Single column layout to maximize output when content exists */
+}
+
+/* When there's no output content, maximize space for input section */
+.app-content-area.no-output {
+  display: block; /* Single column layout when only showing input */
+}
+
+.input-section {
+  flex: 1.2;
+  min-width: 300px;
+  background: rgba(15, 23, 42, 0.9); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+/* Output section - maximize space when content is present */
+.output-section {
+  flex: 2;
+  min-width: 600px;
+  background: rgba(15, 23, 42, 0.9); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* When no output content, maximize the available space */
+.output-section.full-width {
+  width: 90%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  flex: none;
+}
+
+.input-section {
+  background: rgba(15, 23, 42, 0.9); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+.input-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #93c5fd; /* Bright blue for high contrast */
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.output-section {
+  background: rgba(15, 23, 42, 0.9); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.95); /* Very dark footer */
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  margin-top: auto;
+}
+
+.footer-btn {
+  padding: 0.7rem 1.2rem;
+  border: 1px solid rgba(99, 102, 241, 0.6); /* Light blue-purple border */
+  background: rgba(30, 41, 59, 0.8); /* Dark background */
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #e0f2fe; /* Light blue-white text for high contrast */
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.footer-btn:hover {
+  background: rgba(79, 70, 229, 0.7); /* Purple hover */
+  border-color: #a5b4fc; /* Lighter purple border on hover */
+  color: #f8fafc; /* Even lighter text on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Generation Form Styles */
+.generation-form h2 {
+  color: #93c5fd; /* Bright blue */
+}
+
+.form-group label {
+  color: #e2e8f0; /* Light text */
+}
+
+.form-group input[type="text"],
+.form-group select,
+.form-group textarea {
+  background: rgba(30, 41, 59, 0.8); /* Dark background */
+  color: #f8fafc; /* Very light text */
+  border: 1px solid rgba(99, 102, 241, 0.5); /* Light blue-purple border */
+  border-radius: 6px;
+  padding: 0.7rem;
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #818cf8; /* Light purple focus */
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+}
+
+.generate-button {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8); /* Blue gradient */
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.generate-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1e40af); /* Darker blue */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+.generate-button:disabled {
+  background: #64748b; /* Gray when disabled */
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Content Viewer Styles */
+.content-header h1 {
+  color: #e0f2fe; /* Bright blue-white */
+}
+
+.content-header span {
+  color: #cbd5e1; /* Light grey text */
+}
+
+.content-header .download-btn {
+  background: linear-gradient(135deg, #10b981, #047857); /* Green gradient */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.content-header .download-btn:hover {
+  background: linear-gradient(135deg, #059669, #065f46); /* Darker green */
+  transform: translateY(-1px);
+}
+
+.section-title {
+  color: #93c5fd; /* Bright blue */
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.subsection-title {
+  color: #a5b4fc; /* Light purple-blue */
+}
+
+.subsubsection-title {
+  color: #c4b5fd; /* Lighter purple */
+}
+
+.paragraph {
+  color: #e2e8f0; /* Light text for paragraphs */
+}
+
+.list-item {
+  color: #e2e8f0; /* Light text for list items */
+}
+
+.code-block {
+  background: rgba(30, 41, 59, 0.8); /* Dark background */
+  color: #cbd5e1; /* Light text */
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+.highlighted-term {
+  background-color: rgba(251, 191, 36, 0.2); /* Slight amber highlight */
+  border-bottom: 2px solid #fbbf24; /* Amber underline */
+  padding: 0 3px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.highlighted-term:hover {
+  background-color: rgba(251, 191, 36, 0.4); /* More prominent on hover */
+}
+
+/* Knowledge Base Styles */
+.knowledge-base h2 {
+  color: #e0f2fe; /* Bright blue-white */
+}
+
+.knowledge-entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.knowledge-entry {
+  background: rgba(30, 41, 59, 0.7); /* Dark background */
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.knowledge-entry:hover {
+  background: rgba(79, 70, 229, 0.5); /* Purple hover */
+  border-color: #a5b4fc; /* Light purple border */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.knowledge-term {
+  color: #93c5fd; /* Bright blue */
+  font-weight: 600;
+}
+
+.knowledge-definition {
+  color: #cbd5e1; /* Light grey */
+}
+
+/* History Tracker Styles */
+.history-tracker {
+  background: rgba(30, 41, 59, 0.8); /* Dark background */
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.history-header {
+  background: rgba(15, 23, 42, 0.9); /* Darker header */
+  border-bottom: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  border-radius: 8px 8px 0 0;
+  padding: 0.8rem;
+}
+
+.history-header h3 {
+  margin: 0;
+  color: #e2e8f0; /* Light text */
+}
+
+.history-items {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.8rem;
+}
+
+.history-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2); /* Subtle border */
+}
+
+.history-prompt {
+  color: #e2e8f0; /* Light text */
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.history-timestamp {
+  color: #94a3b8; /* Lighter grey */
+  font-size: 0.8rem;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  background: rgba(30, 41, 59, 0.9); /* Dark background */
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin: 1rem 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1; /* Light text */
+}
+
+.progress-bar {
+  height: 20px;
+  background-color: rgba(15, 23, 42, 0.7); /* Darker background */
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* Blue to purple gradient */
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.progress-percentage {
+  color: #f8fafc; /* Light text */
+  font-weight: bold;
+}
+
+/* Detail Popup Styles */
+.detail-popup {
+  background: rgba(15, 23, 42, 0.95); /* Very dark background */
+  border: 1px solid rgba(99, 102, 241, 0.6); /* Light blue-purple border */
+  color: #f8fafc; /* Light text */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.detail-header {
+  color: #93c5fd; /* Bright blue */
+}
+
+.close-detail-btn {
+  background: rgba(148, 163, 184, 0.4); /* Grey background */
+  color: #f8fafc; /* Light text */
+  border: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-detail-btn:hover {
+  background: rgba(99, 102, 241, 0.6); /* Purple hover */
+}
+
+/* Log Viewer Styles */
+.logs-viewer {
+  background: rgba(15, 23, 42, 0.95); /* Very dark background */
+  border-top: 2px solid rgba(99, 102, 241, 0.6); /* Light blue-purple border */
+  color: #e2e8f0; /* Light text */
+}
+
+.logs-header {
+  background: rgba(30, 41, 59, 0.95); /* Dark header */
+  border-bottom: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+.log-entry {
+  background: rgba(30, 41, 59, 0.6); /* Dark background */
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2); /* Light grey border */
+}
+
+.log-entry.log-info { background-color: rgba(59, 130, 246, 0.2); color: #93c5fd; } /* Blue */
+.log-entry.log-warning { background-color: rgba(251, 191, 36, 0.2); color: #fbbf24; } /* Amber */
+.log-entry.log-error { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; } /* Red */
+.log-entry.log-debug { background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; } /* Emerald */
+
+.log-timestamp {
+  color: #94a3b8; /* Light grey */
+}
+
+.log-module {
+  color: #93c5fd; /* Blue */
+}
+
+.log-level {
+  padding: 0.1rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.log-level-info { background-color: #3b82f6; color: white; } /* Blue */
+.log-level-warning { background-color: #f59e0b; color: white; } /* Amber */
+.log-level-error { background-color: #ef4444; color: white; } /* Red */
+.log-level-debug { background-color: #10b981; color: white; } /* Emerald */
+
+/* History Viewer Styles */
+.history-viewer {
+  background: rgba(15, 23, 42, 0.95); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-top: 2px solid rgba(99, 102, 241, 0.6); /* Light blue-purple border */
+  color: #e2e8f0; /* Light text */
+}
+
+.history-header {
+  background: rgba(30, 41, 59, 0.95); /* Dark header */
+  border-bottom: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+.history-item {
+  border: 1px solid rgba(99, 102, 241, 0.3); /* Light blue-purple border */
+  background: rgba(30, 41, 59, 0.6); /* Dark background */
+}
+
+.history-item:hover {
+  background: rgba(79, 70, 229, 0.5); /* Purple hover */
+  border-color: #a5b4fc; /* Light purple border */
+}
+
+.view-btn, .download-btn {
+  background: rgba(51, 65, 85, 0.7); /* Dark button */
+  color: #e2e8f0; /* Light text */
+  border: 1px solid rgba(99, 102, 241, 0.5); /* Light blue-purple border */
+}
+
+.view-btn:hover, .download-btn:hover {
+  background: rgba(79, 70, 229, 0.7); /* Purple hover */
+  border-color: #a5b4fc; /* Light purple border */
+  color: #f8fafc; /* Lighter text */
+}
+
+/* Task Dashboard Styles */
+.task-dashboard {
+  background: rgba(15, 23, 42, 0.95); /* Very dark background */
+  backdrop-filter: blur(10px);
+  border-top: 2px solid rgba(99, 102, 241, 0.6); /* Light blue-purple border */
+  color: #e2e8f0; /* Light text */
+}
+
+.task-dashboard-header {
+  background: rgba(30, 41, 59, 0.95); /* Dark header */
+  border-bottom: 1px solid rgba(99, 102, 241, 0.4); /* Light blue-purple border */
+}
+
+.task-item {
+  border: 1px solid rgba(99, 102, 241, 0.3); /* Light blue-purple border */
+  background: rgba(30, 41, 59, 0.6); /* Dark background */
+}
+
+.task-item:hover {
+  background: rgba(79, 70, 229, 0.5); /* Purple hover */
+  border-color: #a5b4fc; /* Light purple border */
+}
+
+.task-status {
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.status-created { background-color: #94a3b8; color: #0f172b; } /* Grey */
+.status-running { background-color: #f59e0b; color: white; } /* Amber */
+.status-completed { background-color: #10b981; color: white; } /* Emerald */
+.status-failed { background-color: #ef4444; color: white; } /* Red */
+
+.refresh-btn, .close-btn {
+  background: rgba(51, 65, 85, 0.7); /* Dark button */
+  color: #e2e8f0; /* Light text */
+  border: 1px solid rgba(99, 102, 241, 0.5); /* Light blue-purple border */
+}
+
+.refresh-btn:hover, .close-btn:hover {
+  background: rgba(79, 70, 229, 0.7); /* Purple hover */
+  border-color: #a5b4fc; /* Light purple border */
+  color: #f8fafc; /* Lighter text */
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+  }
+
+  .input-section,
+  .output-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: unset;
+  }
+}

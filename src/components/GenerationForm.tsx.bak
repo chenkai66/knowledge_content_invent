@@ -1,0 +1,32 @@
+// Generation Form Component
+import React, { useState } from 'react';
+import { ContentGenerationConfig } from '../types';
+import { HistoryTracker } from './HistoryTracker';
+
+interface GenerationFormProps {
+  onGenerate: (config: ContentGenerationConfig) => void;
+  disabled: boolean;
+}
+
+export const GenerationForm: React.FC<GenerationFormProps> = ({ onGenerate, disabled }) => {
+  const [topic, setTopic] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Fixed configuration as per requirements
+    const config: ContentGenerationConfig = {
+      topic,
+      depth: 'deep',          // Always deep
+      style: 'technical',      // Always technical/professional
+      targetAudience: 'beginner', // Professional but understandable by beginners
+      wordCount: 30000,        // Always 30,000 words
+      includeExamples: true,
+      includeDiagrams: false,
+      maxRecurseDepth: 3
+    };
+    
+    onGenerate(config);
+  };
+
+  return (
