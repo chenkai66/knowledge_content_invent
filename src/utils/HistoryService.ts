@@ -13,8 +13,15 @@ export interface Session {
 
 export class HistoryService {
   // Save generated content to history file (using backend API)
-  static async saveToHistory(content: GeneratedContent, originalQuery?: string): Promise<void> {
+  static async saveToHistory(content: GeneratedContent, originalQuery?: string, timestamp?: number): Promise<void> {
     try {
+      // Format timestamp as YYYYMMDDHHMMSS if provided
+      const timestampStr = timestamp ? new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2) : '';
+      // Create query folder name with timestamp: "query-timestamp"
+      const queryWithTimestamp = originalQuery && timestampStr 
+        ? `${this.sanitizeFileName(originalQuery)}-${timestampStr}` 
+        : this.sanitizeFileName(content.title);
+
       const response = await fetch('/api/history/save', {
         method: 'POST',
         headers: {
@@ -23,7 +30,7 @@ export class HistoryService {
         body: JSON.stringify({
           content: content,
           title: this.sanitizeFileName(content.title),
-          query: originalQuery || content.title, // Use original query if available, otherwise use title
+          query: queryWithTimestamp, // Use query with timestamp format
           type: 'generated-content'  // Distinguish from other types of history
         })
       });
@@ -33,7 +40,7 @@ export class HistoryService {
       }
 
       const result = await response.json();
-      console.log(`Content saved to history: ${result.fileName}`);
+      console.log(`Content saved to history: ${result.fileName} in folder: ${queryWithTimestamp}`);
     } catch (error) {
       console.error('Error saving content to history:', error);
       throw error;
@@ -89,7 +96,7 @@ export class HistoryService {
   }
 
   // Save prompt record to history (using backend API)
-  static async savePromptToHistory(promptRecord: PromptRecord): Promise<void> {
+  static async savePromptToHistory(promptRecord: PromptRecord, queryWithTimestamp?: string): Promise<void> {
     try {
       const response = await fetch('/api/history/save', {
         method: 'POST',
@@ -99,6 +106,7 @@ export class HistoryService {
         body: JSON.stringify({
           content: promptRecord,
           title: `prompt_${promptRecord.timestamp}_${this.sanitizeFileName(promptRecord.prompt.substring(0, 30))}`,
+          query: queryWithTimestamp, // Use the same query folder if provided
           type: 'prompt-record'
         })
       });

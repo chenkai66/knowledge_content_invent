@@ -306,7 +306,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
           try {
             const promptRecord = PromptTracker.getPromptById(promptId);
             if (promptRecord) {
-              await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+              await HistoryService.savePromptToHistory(promptRecord);
             }
           } catch (error) {
             logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -392,7 +392,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
           try {
             const promptRecord = PromptTracker.getPromptById(promptId);
             if (promptRecord) {
-              await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+              await HistoryService.savePromptToHistory(promptRecord);
             }
           } catch (error) {
             logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -462,7 +462,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
               try {
                 const promptRecord = PromptTracker.getPromptById(promptId);
                 if (promptRecord) {
-                  await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+                  await HistoryService.savePromptToHistory(promptRecord);
                 }
               } catch (error) {
                 logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -501,7 +501,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
           try {
             const promptRecord = PromptTracker.getPromptById(promptId);
             if (promptRecord) {
-              await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+              await HistoryService.savePromptToHistory(promptRecord);
             }
           } catch (error) {
             logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -548,7 +548,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
         try {
           const promptRecord = PromptTracker.getPromptById(promptId);
           if (promptRecord) {
-            await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+            await HistoryService.savePromptToHistory(promptRecord);
           }
         } catch (error) {
           logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -612,7 +612,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
             try {
               const promptRecord = PromptTracker.getPromptById(promptId);
               if (promptRecord) {
-                await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+                await HistoryService.savePromptToHistory(promptRecord);
               }
             } catch (error) {
               logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
@@ -650,7 +650,7 @@ Your prompt was: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}
         try {
           const promptRecord = PromptTracker.getPromptById(promptId);
           if (promptRecord) {
-            await HistoryService.savePromptToHistory(promptRecord, TaskContext.getCurrentQueryWithTimestamp());
+            await HistoryService.savePromptToHistory(promptRecord);
           }
         } catch (error) {
           logger.warning('real-llm-service', 'Failed to save prompt to file-based history', { error });
