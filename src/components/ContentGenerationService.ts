@@ -36,7 +36,18 @@ export class ContentGenerationService {
     LocalStorageService.saveGenerationHistory(content.title, content.id); // Use AI-generated title
 
     // Save to history folder - organize by original query/topic with timestamp
-    await HistoryService.saveToHistory(content, config.topic, Date.now());
+    // Use the exact user input from config.topic as the basis for folder naming
+    const timestamp = Date.now();
+    const timestampStr = new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
+    const queryWithTimestamp = config.topic ? `${this.sanitizeFileName(config.topic)}-${timestampStr}` : `untitled-${timestampStr}`;
+    
+    // Set the global query context to ensure all subsequent LLM calls use this same folder
+    TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
+    
+    await HistoryService.saveToHistory(content, config.topic, timestamp);
+    
+    // Clear the context after saving
+    TaskContext.setCurrentQueryWithTimestamp(null);
 
     // Save knowledge base entries
     for (const entry of content.knowledgeBase) {
