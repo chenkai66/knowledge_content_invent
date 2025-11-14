@@ -28,12 +28,6 @@ export class ContentGenerationService {
 
   // Method to run a specific task
   async runTask(taskId: string, config: ContentGenerationConfig): Promise<GeneratedContent> {
-    // Set the query context with timestamp before running the task
-    const timestamp = Date.now();
-    const timestampStr = new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
-    const queryWithTimestamp = config.topic ? `${this.sanitizeFileName(config.topic)}-${timestampStr}` : `untitled-${timestampStr}`;
-    TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
-    
     const runner = new TaskRunner(taskId);
     const content = await runner.runTask(config);
 
@@ -42,21 +36,24 @@ export class ContentGenerationService {
     LocalStorageService.saveGenerationHistory(content.title, content.id); // Use AI-generated title
 
     // Save to history folder - organize by original query/topic with timestamp
-    await HistoryService.saveToHistory(content, config.topic, timestamp);
+    await HistoryService.saveToHistory(content, config.topic, Date.now());
 
     // Save knowledge base entries
     for (const entry of content.knowledgeBase) {
       LocalStorageService.saveKnowledgeBaseEntry(entry);
     }
 
-    // Clear the query context after completion
-    TaskContext.setCurrentQueryWithTimestamp(null);
-    
     return content;
   }
 
   // Original generateContent method but now using tasks
   async generateContent(config: ContentGenerationConfig): Promise<GeneratedContent> {
+    // Set the query context with timestamp before creating the task
+    const timestamp = Date.now();
+    const timestampStr = new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
+    const queryWithTimestamp = config.topic ? `${this.sanitizeFileName(config.topic)}-${timestampStr}` : `untitled-${timestampStr}`;
+    TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
+    
     // Create a task for this generation with the keyword extraction setting
     const task = this.createTask({
       ...config,
@@ -68,6 +65,9 @@ export class ContentGenerationService {
       ...config,
       enableKeywordExtraction: config.enableKeywordExtraction ?? true
     });
+    
+    // Clear the query context after completion
+    TaskContext.setCurrentQueryWithTimestamp(null);
 
     return content;
   }

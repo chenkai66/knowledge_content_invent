@@ -197,8 +197,8 @@ app.post('/api/history/save', (req, res) => {
       return res.status(400).json({ error: 'Content is required' });
     }
 
-    // Use the original query as the directory name if provided, otherwise use the title
-    const directoryName = (query || title || 'untitled').replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50);
+    // Use the original query as the directory name if provided and not empty, otherwise use the title
+    const directoryName = (query && query.trim() ? query : (title || 'untitled')).replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50);
     const dirPath = path.join(HISTORY_DIR, directoryName);
 
     // Create directory if it doesn't exist
