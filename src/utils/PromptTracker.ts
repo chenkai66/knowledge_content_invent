@@ -8,6 +8,7 @@ export interface PromptRecord {
   timestamp: number;
   model?: string;
   response?: string;
+  status?: 'success' | 'error' | 'timeout' | 'pending'; // Status of the prompt execution
   metadata?: Record<string, any>;
 }
 

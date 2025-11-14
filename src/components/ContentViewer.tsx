@@ -155,7 +155,7 @@ export const ContentViewer: React.FC<ContentViewerProps> = ({ content, onDetailC
     <div className="content-viewer" style={{ width: '100%' }}>
       <div className="content-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ color: 'white' }}>{safeContent.title}</h1>
+          <h1 style={{ color: '#1e293b' }}>{safeContent.title}</h1>
           <button 
             className="download-btn"
             onClick={downloadContentAsDocument}
@@ -299,10 +299,10 @@ export const ContentViewer: React.FC<ContentViewerProps> = ({ content, onDetailC
 
         .main-content {
           line-height: 1.8;
-          color: #34495e;
+          color: #1e293b; /* Dark text for better readability on white background */
           overflow-wrap: break-word;
           word-wrap: break-word;
-          background-color: white;
+          background-color: white; /* Light background as requested */
           padding: 1.5rem;
           border-radius: 8px;
           box-shadow: 0 2px 10px rgba(0,0,0,0.05);

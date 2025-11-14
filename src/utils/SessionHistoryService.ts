@@ -3,8 +3,8 @@ import { GeneratedContent, PromptRecord } from '../types';
 import { deserializeContent } from '../utils';
 import { Session } from './HistoryService';
 
-export interface SessionHistoryService {
-  // Get history organized by sessions (grouped by time periods)
+export class SessionHistoryService {
+  // Get history organized by sessions (grouped by query folders)
   static async getHistoryBySessions(): Promise<Session[]> {
     try {
       const response = await fetch('/api/history/index');
@@ -13,25 +13,62 @@ export interface SessionHistoryService {
       }
 
       const result = await response.json();
-      if (result.success && result.sessions) {
-        // Return the organized session data
-        return result.sessions;
+      if (result.success && result.history) {
+        // Group history items by query folder
+        const historyItems = result.history;
+        const groupedByQuery: Record<string, typeof historyItems> = {};
+        const queryTitles: Record<string, string> = {};
+        
+        historyItems.forEach((item: any) => {
+          const folder = item.queryFolder || 'unorganized';
+          if (!groupedByQuery[folder]) {
+            groupedByQuery[folder] = [];
+          }
+          groupedByQuery[folder].push(item);
+          
+          // Store a representative title for the query folder
+          if (!queryTitles[folder]) {
+            queryTitles[folder] = item.query || item.title || folder;
+          }
+        });
+
+        // Convert to Session format
+        const organizedSessions: Session[] = Object.entries(groupedByQuery).map(([folder, items]) => ({
+          id: folder,
+          title: queryTitles[folder] || folder,
+          startTime: Math.min(...items.map((item: any) => item.timestamp)),
+          endTime: Math.max(...items.map((item: any) => item.timestamp)),
+          tasks: items.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            timestamp: item.timestamp
+          }))
+        }));
+
+        // Sort sessions by most recent
+        organizedSessions.sort((a, b) => b.startTime - a.startTime);
+        
+        return organizedSessions;
       } else {
         // Fallback to flat history if sessions aren't available
         const flatHistory = result.success ? result.history : [];
         const sessions: Session[] = [];
-        
+
         if (flatHistory.length > 0) {
           // Create a single session containing all items if no sessions are organized
           sessions.push({
             id: 'all-items-session',
             title: '全部历史记录',
-            startTime: Math.min(...flatHistory.map(h => h.timestamp)),
-            endTime: Math.max(...flatHistory.map(h => h.timestamp)),
-            tasks: flatHistory
+            startTime: Math.min(...flatHistory.map((h: any) => h.timestamp)),
+            endTime: Math.max(...flatHistory.map((h: any) => h.timestamp)),
+            tasks: flatHistory.map((h: any) => ({
+              id: h.id,
+              title: h.title,
+              timestamp: h.timestamp
+            }))
           });
         }
-        
+
         return sessions;
       }
     } catch (error) {
@@ -51,7 +88,7 @@ export interface SessionHistoryService {
       const result = await response.json();
       if (result.success) {
         // Determine if it's content or prompt record and return appropriately
-        if (result.content.mainContent !== undefined) {
+        if (result.content?.mainContent !== undefined) {
           // This is a GeneratedContent object
           return deserializeContent(JSON.stringify(result.content));
         } else {

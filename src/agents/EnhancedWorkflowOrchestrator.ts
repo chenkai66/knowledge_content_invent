@@ -42,7 +42,8 @@ export class EnhancedWorkflowOrchestrator {
 
     // Step 1: Rewrite the user prompt (1-5%)
     progressTracker.updateProgress('Rewriting user prompt', 'Improving clarity and specificity');
-    const rewrittenPrompt = await this.rewritePrompt(userInput);
+    const rewriteResult = await this.rewritePrompt(userInput);
+    const rewrittenPrompt = rewriteResult.rewrittenPrompt;
     
     // Step 2: Generate search plan (6-10%)
     progressTracker.updateProgress('Generating search plan', 'Creating multi-agent search strategy');
@@ -60,9 +61,9 @@ export class EnhancedWorkflowOrchestrator {
     progressTracker.updateProgress('Generating comprehensive content', 'Creating detailed content with multiple LLM calls (this may take a while)');
     const mainContent = await this.generateComprehensiveContent(rewrittenPrompt, searchSummary);
     
-    // Step 6: Validate and finalize (71-75%)
-    progressTracker.updateProgress('Validating content', 'Checking quality and structure');
-    const finalContent = await this.validateContent(mainContent);
+    // Finalize content (skip validation step as requested)
+    progressTracker.updateProgress('Finalizing content', 'Combining content and knowledge base');
+    const finalContent = mainContent; // Skipping validation step
     
     // Create the final content structure
     const contentId = this.generateId();
@@ -81,13 +82,26 @@ export class EnhancedWorkflowOrchestrator {
       progressTracker.updateProgress('Skipping knowledge base', 'Keyword extraction is disabled');
     }
     
-    // Extract the actual title from the generated content (often the first H1 or main heading)
-    const extractedTitle = this.extractTitleFromContent(finalContent) || rewrittenPrompt;
+    // Use the title from the rewrite result instead of extracting from content
+    const extractedTitle = rewriteResult.title;
     
+    // Combine main content with knowledge base (keyword cards) to form complete output
+    let completeContent = finalContent;
+    
+    // Append knowledge base entries to the main content if any exist
+    if (knowledgeBase && knowledgeBase.length > 0) {
+      completeContent += '\n\n## 关键术语详解\n\n';
+      
+      for (const kbEntry of knowledgeBase) {
+        completeContent += `### ${kbEntry.term}\n\n`;
+        completeContent += `${kbEntry.definition}\n\n`;
+      }
+    }
+
     const generatedContent: GeneratedContent = {
       id: contentId,
       title: extractedTitle,  // Use the AI-generated title from the content
-      mainContent: finalContent,
+      mainContent: completeContent,  // Combined content with knowledge base appended
       nodes: contentNodes,
       knowledgeBase,
       timestamp,
@@ -97,7 +111,7 @@ export class EnhancedWorkflowOrchestrator {
         `Executed ${searchResults.length} searches`,
         `Created content with multiple LLM calls`,
         enableKeywordExtraction 
-          ? `Generated knowledge base with multiple terms`
+          ? `Generated knowledge base with ${knowledgeBase.length} terms`
           : `Skipped knowledge base generation (keyword extraction disabled)`
       ],
       progress: progressTracker.getProgress()
@@ -107,7 +121,8 @@ export class EnhancedWorkflowOrchestrator {
     return generatedContent;
   }
 
-  private async rewritePrompt(userInput: string): Promise<string> {
+  // Define interface for the return type
+private async rewritePrompt(userInput: string): Promise<{rewrittenPrompt: string, title: string}> {
     const rewritePrompt = PROMPTS.REWRITE_PROMPT.replace('{userInput}', userInput);
 
     // Retry mechanism with 3 attempts
@@ -134,11 +149,21 @@ export class EnhancedWorkflowOrchestrator {
         
         // Extract the main content between these markers
         let cleanResult = result;
+        let extractedTitle = userInput.substring(0, 50); // default fallback
         if (startIndex !== -1) {
           const contentLines = startIndex !== -1 && endIndex !== -1 
             ? lines.slice(startIndex, endIndex) 
             : lines.slice(startIndex);
           cleanResult = contentLines.join('\n').trim();
+          
+          // Try to extract a title from the first meaningful line
+          for (const line of contentLines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
+              extractedTitle = trimmedLine.substring(0, 100); // limit title length
+              break;
+            }
+          }
         }
         
         // Further clean the result to remove common artifacts
@@ -148,18 +173,35 @@ export class EnhancedWorkflowOrchestrator {
         
         if (cleanResult && cleanResult.trim()) {
           logger.info('workflow-orchestrator', `Prompt rewrite completed (attempt ${attempt + 1})`);
-          return cleanResult.trim();
+          
+          // If no title was extracted, try to get a reasonable title from the content
+          if (extractedTitle === userInput.substring(0, 50)) {
+            const firstLine = cleanResult.split('\n')[0].trim();
+            extractedTitle = firstLine.length <= 100 ? firstLine : userInput.substring(0, 50) + '...';
+          }
+          
+          return {
+            rewrittenPrompt: cleanResult.trim(),
+            title: extractedTitle
+          };
         }
       } catch (error) {
         logger.warning('workflow-orchestrator', `Prompt rewrite attempt ${attempt + 1} failed`, { error });
         if (attempt === 2) { // Last attempt
-          throw error;
+          return {
+            rewrittenPrompt: userInput,
+            title: userInput.substring(0, 50) // fallback
+          };
         }
         // Wait before retry
         await this.delay(2000);
       }
     }
-    return userInput; // fallback
+    
+    return {
+      rewrittenPrompt: userInput,
+      title: userInput.substring(0, 50) // fallback
+    };
   }
 
   private async generateSearchPlan(topic: string): Promise<{ queries: string[] }> {
@@ -775,4 +817,6 @@ export class EnhancedWorkflowOrchestrator {
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+
+
 }

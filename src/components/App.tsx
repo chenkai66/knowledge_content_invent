@@ -13,6 +13,8 @@ import { HistoryService } from '../utils/HistoryService';
 import { PromptTracker } from '../utils/PromptTracker';
 import { progressTracker } from '../utils/Logger';
 import { TaskDashboard } from './TaskDashboard';
+import { TaskLogViewer } from './TaskLogViewer';
+import { QueryBasedHistoryViewer } from './QueryBasedHistoryViewer';
 
 // Initialize content service following CIOLLM patterns
 const initializeContentService = (): ContentGenerationService => {
@@ -52,10 +54,10 @@ export const App: React.FC = () => {
   const [progressDetails, setProgressDetails] = React.useState('');
   const [selectedDetail, setSelectedDetail] = React.useState<any>(null);
   const [showDetailPopup, setShowDetailPopup] = React.useState(false);
-  const [showLogs, setShowLogs] = React.useState(false);
-  const [showHistory, setShowHistory] = React.useState(false);
   const [enableKeywordExtraction, setEnableKeywordExtraction] = React.useState(true); // Option for keyword extraction
+  const [showTaskLogs, setShowTaskLogs] = React.useState(false); // State for merged task logs
   const [showTaskDashboard, setShowTaskDashboard] = React.useState(false); // State for task dashboard
+  const [showQueryBasedHistory, setShowQueryBasedHistory] = React.useState(false); // State for query-based history viewer
 
   // Effect to track progress
   React.useEffect(() => {
@@ -207,49 +209,50 @@ export const App: React.FC = () => {
       </header>
 
       <div className={`app-content-area ${generatedContent ? 'has-output' : 'no-output'}`}>
-        <div className="input-section">
-          <GenerationForm 
-            onGenerate={handleGenerate} 
-            disabled={isGenerating}
-            enableKeywordExtraction={enableKeywordExtraction}
-            onKeywordExtractionChange={(enabled) => setEnableKeywordExtraction(enabled)}
-          />
-          
-          {isGenerating && (
-            <div className="progress-section">
-              <ProgressBar progress={progress} details={progressDetails} />
-            </div>
-          )}
-        </div>
-
-        <main className={`output-section ${generatedContent ? '' : 'full-width'}`}>
-          {generatedContent ? (
-            <div style={{ padding: '1rem' }}>
-              <ContentViewer
-                content={generatedContent}
-                onDetailClick={handleDetailClick}
-              />
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-              <p>请输入主题并点击生成按钮以开始内容创作</p>
-            </div>
-          )}
-        </main>
+        {!generatedContent ? (
+          // Show input section when no content is generated
+          <div className="input-section">
+            <GenerationForm 
+              onGenerate={handleGenerate} 
+              disabled={isGenerating}
+              enableKeywordExtraction={enableKeywordExtraction}
+              onKeywordExtractionChange={(enabled) => setEnableKeywordExtraction(enabled)}
+            />
+            
+            {isGenerating && (
+              <div className="progress-section">
+                <ProgressBar progress={progress} details={progressDetails} />
+              </div>
+            )}
+          </div>
+        ) : (
+          // Show output section full-width when content is generated
+          <main className="output-section full-width">
+            <ContentViewer
+              content={generatedContent}
+              onDetailClick={handleDetailClick}
+            />
+          </main>
+        )}
+        
+        {/* Empty placeholder to maintain layout structure if no content is available */}
+        {!generatedContent && (
+          <div className="output-section-placeholder"></div>
+        )}
       </div>
 
       <footer className="app-footer">
         <button
-          className="footer-btn logs-btn"
-          onClick={() => setShowLogs(!showLogs)}
+          className="footer-btn task-logs-btn"
+          onClick={() => setShowTaskLogs(!showTaskLogs)}
         >
-          {showLogs ? '隐藏' : '显示'} 日志
+          {showTaskLogs ? '隐藏' : '显示'} 当前任务日志
         </button>
         <button
           className="footer-btn history-btn"
-          onClick={() => setShowHistory(!showHistory)}
+          onClick={() => setShowQueryBasedHistory(!showQueryBasedHistory)}
         >
-          {showHistory ? '隐藏' : '显示'} 历史记录
+          {showQueryBasedHistory ? '隐藏' : '显示'} 按查询历史
         </button>
         <button
           className="footer-btn task-btn"
@@ -266,12 +269,18 @@ export const App: React.FC = () => {
         />
       )}
 
-      {showLogs && <LogsViewer visible={showLogs} onClose={() => setShowLogs(false)} />}
+      {showTaskLogs && (
+        <TaskLogViewer
+          visible={showTaskLogs}
+          onClose={() => setShowTaskLogs(false)}
+          onItemSelect={handleHistoryItemSelect}
+        />
+      )}
 
-      {showHistory && (
-        <HistoryViewer
-          visible={showHistory}
-          onClose={() => setShowHistory(false)}
+      {showQueryBasedHistory && (
+        <QueryBasedHistoryViewer
+          visible={showQueryBasedHistory}
+          onClose={() => setShowQueryBasedHistory(false)}
           onItemSelect={handleHistoryItemSelect}
         />
       )}

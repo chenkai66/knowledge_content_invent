@@ -34,8 +34,8 @@ export class ContentGenerationService {
     LocalStorageService.saveGeneratedContent(content);
     LocalStorageService.saveGenerationHistory(content.title, content.id); // Use AI-generated title
     
-    // Save to history folder - using AI-generated title
-    await HistoryService.saveToHistory(content);
+    // Save to history folder - organize by original query/topic
+    await HistoryService.saveToHistory(content, config.topic);
 
     // Save knowledge base entries
     for (const entry of content.knowledgeBase) {

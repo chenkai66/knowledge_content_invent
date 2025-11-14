@@ -13,7 +13,7 @@ export interface Session {
 
 export class HistoryService {
   // Save generated content to history file (using backend API)
-  static async saveToHistory(content: GeneratedContent): Promise<void> {
+  static async saveToHistory(content: GeneratedContent, originalQuery?: string): Promise<void> {
     try {
       const response = await fetch('/api/history/save', {
         method: 'POST',
@@ -23,6 +23,7 @@ export class HistoryService {
         body: JSON.stringify({
           content: content,
           title: this.sanitizeFileName(content.title),
+          query: originalQuery || content.title, // Use original query if available, otherwise use title
           type: 'generated-content'  // Distinguish from other types of history
         })
       });
@@ -59,8 +60,8 @@ export class HistoryService {
     }
   }
 
-  // Get history organized by sessions
-  static async getHistoryBySessions(): Promise<Session[]> {
+  // Get simplified history with just user queries and final documents
+  static async getSimpleHistory(): Promise<Array<{id: string, query: string, timestamp: number, filePath: string}>> {
     try {
       const response = await fetch('/api/history/index');
       if (!response.ok) {
@@ -69,78 +70,20 @@ export class HistoryService {
 
       const result = await response.json();
       if (result.success) {
-        // Use the session data if available, otherwise create sessions from history
-        if (result.sessions && result.sessions.length > 0) {
-          return result.sessions;
-        }
-        
-        // Group history items by session (within 30-minute windows of each other)
+        // Return only the final generated content (not intermediate steps)
         const historyItems = result.history || [];
-        const sessions: Session[] = [];
-
-        if (historyItems.length === 0) {
-          return sessions;
-        }
-
-        // Sort by timestamp (newest first)
-        const sortedItems = historyItems.sort((a, b) => b.timestamp - a.timestamp);
-
-        let currentSession: Session | null = null;
-        const SESSION_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
-
-        for (const item of sortedItems) {
-          // If no current session or this item is outside the threshold, start a new session
-          if (!currentSession || (currentSession.startTime - item.timestamp) > SESSION_THRESHOLD_MS) {
-            // Finalize the previous session if it exists
-            if (currentSession) {
-              // Make sure to set the endTime as the timestamp of the latest item in the session
-              currentSession.endTime = currentSession.tasks[currentSession.tasks.length - 1]?.timestamp || currentSession.startTime;
-              sessions.push(currentSession);
-            }
-
-            // Start a new session
-            currentSession = {
-              id: `session-${Date.now()}-${item.timestamp}`,
-              title: `会话 ${new Date(item.timestamp).toLocaleDateString('zh-CN')} ${new Date(item.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
-              startTime: item.timestamp,
-              endTime: item.timestamp,
-              tasks: [{
-                id: item.id,
-                title: item.title,
-                timestamp: item.timestamp
-              }]
-            };
-          } else {
-            // Add to the current session
-            if (currentSession) {
-              currentSession.tasks.push({
-                id: item.id,
-                title: item.title,
-                timestamp: item.timestamp
-              });
-
-              // Update the session's start/end times
-              if (item.timestamp < currentSession.startTime) {
-                currentSession.startTime = item.timestamp;
-              }
-              if (item.timestamp > currentSession.endTime) {
-                currentSession.endTime = item.timestamp;
-              }
-            }
-          }
-        }
-
-        // Add the last session if it exists
-        if (currentSession) {
-          sessions.push(currentSession);
-        }
-
-        return sessions;
+        
+        return historyItems.map(item => ({
+          id: item.id,
+          query: item.title, // Use the title as the query
+          timestamp: item.timestamp,
+          filePath: item.filePath
+        })).sort((a, b) => b.timestamp - a.timestamp); // Sort by newest first
       } else {
         throw new Error(result.error || 'Failed to load history index');
       }
     } catch (error) {
-      console.error('Error loading history by sessions:', error);
+      console.error('Error loading simple history:', error);
       return [];
     }
   }
@@ -211,7 +154,7 @@ export class HistoryService {
 
   // Get only prompt records from history (currently from prompt tracker)
   static async getPromptRecords(): Promise<PromptRecord[]> {
-    // Returns prompt records from the prompt tracker (would be extended to include file-based prompts)
+    // Returns prompt records from the prompt tracker (would be expanded to include file-based prompts)
     return PromptTracker.getPromptHistory();
   }
 
@@ -227,6 +170,40 @@ export class HistoryService {
   static async deleteHistoryEntry(id: string): Promise<void> {
     // Placeholder - would need backend API endpoint to implement this
     console.warn('Delete history entry not yet implemented in backend');
+  }
+
+  // Clear all history entries from backend
+  static async clearAllHistory(): Promise<void> {
+    try {
+      const response = await fetch('/api/history/clear', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to clear history: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('All history cleared successfully:', result.message);
+    } catch (error) {
+      console.error('Error clearing all history:', error);
+      // Fallback - try to clear locally stored history entries
+      try {
+        // Remove all history-related items from localStorage
+        const keysToRemove = Object.keys(localStorage).filter(key => 
+          key.startsWith('history_') || key.includes('history') || key === 'generated_content'
+        );
+        
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        console.log(`Cleared ${keysToRemove.length} local history items`);
+      } catch (localError) {
+        console.error('Error clearing local history:', localError);
+      }
+      throw error;
+    }
   }
 }
 

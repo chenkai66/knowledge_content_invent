@@ -191,25 +191,35 @@ app.post('/api/llm/generate', async (req, res) => {
 // Save content to history
 app.post('/api/history/save', (req, res) => {
   try {
-    const { content, title } = req.body;
+    const { content, title, query } = req.body; // Accept the original query as a parameter
     
-    if (!content || !title) {
-      return res.status(400).json({ error: 'Content and title are required' });
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
     }
 
-    // Generate a unique filename
-    const fileName = `${Date.now()}_${title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50)}.json`;
-    const filePath = path.join(HISTORY_DIR, fileName);
+    // Use the original query as the directory name if provided, otherwise use the title
+    const directoryName = (query || title || 'untitled').replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50);
+    const dirPath = path.join(HISTORY_DIR, directoryName);
+
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Generate a unique filename within the query directory
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.json`;
+    const filePath = path.join(dirPath, fileName);
     
     // Write content to file
     fs.writeFileSync(filePath, JSON.stringify(content, null, 2));
     
-    logger.info('file-storage', `Content saved to history: ${filePath}`);
+    logger.info('file-storage', `Content saved to history in query folder: ${directoryName} at ${filePath}`);
     
     res.json({
       success: true,
       fileName: fileName,
-      path: filePath
+      path: filePath,
+      queryFolder: directoryName // Return the query folder name for frontend use
     });
   } catch (error) {
     logger.error('file-storage', 'Failed to save content to history', { error: error.message });
@@ -220,15 +230,49 @@ app.post('/api/history/save', (req, res) => {
   }
 });
 
-// Get history index organized by sessions
+// Get history index organized by query folders
 app.get('/api/history/index', (req, res) => {
   try {
-    const files = fs.readdirSync(HISTORY_DIR);
-    const allFiles = files
-      .filter(file => file.endsWith('.json'))
-      .map(file => {
-        const filePath = path.join(HISTORY_DIR, file);
-        const stats = fs.statSync(filePath);
+    const allFiles = [];
+    
+    // Read all directories and files in the history directory
+    const items = fs.readdirSync(HISTORY_DIR);
+    
+    for (const item of items) {
+      const itemPath = path.join(HISTORY_DIR, item);
+      const stats = fs.statSync(itemPath);
+      
+      if (stats.isDirectory()) {
+        // If it's a directory (organized by query), read the files inside
+        const subItems = fs.readdirSync(itemPath);
+        for (const subItem of subItems) {
+          if (subItem.endsWith('.json')) {
+            const filePath = path.join(itemPath, subItem);
+            const subStats = fs.statSync(filePath);
+            const content = fs.readFileSync(filePath, 'utf8');
+            let parsedContent;
+            try {
+              parsedContent = JSON.parse(content);
+            } catch (e) {
+              // If parsing fails, use file content as main content
+              parsedContent = { title: 'Unknown Content', mainContent: content };
+            }
+            
+            allFiles.push({
+              id: subItem,  // Just the filename (not the full path)
+              title: parsedContent.title || subItem.replace(/\.json$/, '').split('_').slice(1).join('_'),
+              timestamp: subStats.birthtime.getTime(),
+              filePath: filePath,  // Full path for internal file operations
+              queryFolder: item,   // The topic/query that this content belongs to
+              type: parsedContent.type || 'generated-content',
+              contentPreview: parsedContent.mainContent?.substring(0, 100) || 'No preview'
+            });
+          }
+        }
+      } else if (item.endsWith('.json')) {
+        // If it's a direct JSON file (not in a directory), for backward compatibility
+        const filePath = path.join(HISTORY_DIR, item);
+        const fileStats = fs.statSync(filePath);
         const content = fs.readFileSync(filePath, 'utf8');
         let parsedContent;
         try {
@@ -238,63 +282,24 @@ app.get('/api/history/index', (req, res) => {
           parsedContent = { title: 'Unknown Content', mainContent: content };
         }
         
-        return {
-          id: file,
-          title: parsedContent.title || file.replace(/\.json$/, '').split('_').slice(1).join('_'),
-          timestamp: stats.birthtime.getTime(),
+        allFiles.push({
+          id: item,
+          title: parsedContent.title || item.replace(/\.json$/, '').split('_').slice(1).join('_'),
+          timestamp: fileStats.birthtime.getTime(),
           filePath: filePath,
+          queryFolder: 'unorganized',  // Put in 'unorganized' folder for legacy files
           type: parsedContent.type || 'generated-content',
           contentPreview: parsedContent.mainContent?.substring(0, 100) || 'No preview'
-        };
-      })
-      .sort((a, b) => b.timestamp - a.timestamp); // Sort by newest first
-
-    // Group files by session (files within 30 minutes of each other)
-    const sessions = [];
-    const SESSION_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
-    
-    if (allFiles.length > 0) {
-      let currentSession = {
-        id: `session-${allFiles[0].timestamp}`,
-        title: `会话 ${new Date(allFiles[0].timestamp).toLocaleDateString('zh-CN')} ${new Date(allFiles[0].timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
-        startTime: allFiles[0].timestamp,
-        endTime: allFiles[0].timestamp,
-        tasks: [allFiles[0]]
-      };
-      
-      for (let i = 1; i < allFiles.length; i++) {
-        const file = allFiles[i];
-        
-        // If this file is within the session threshold of the current session, add to it
-        if ((currentSession.endTime - file.timestamp) < SESSION_THRESHOLD_MS) {
-          currentSession.tasks.push(file);
-          // Update session end time to this file's timestamp if it's later
-          if (file.timestamp > currentSession.endTime) {
-            currentSession.endTime = file.timestamp;
-          }
-        } else {
-          // Finalize the current session and start a new one
-          sessions.push(currentSession);
-          currentSession = {
-            id: `session-${file.timestamp}`,
-            title: `会话 ${new Date(file.timestamp).toLocaleDateString('zh-CN')} ${new Date(file.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`,
-            startTime: file.timestamp,
-            endTime: file.timestamp,
-            tasks: [file]
-          };
-        }
-      }
-      
-      // Add the final session
-      if (currentSession) {
-        sessions.push(currentSession);
+        });
       }
     }
+    
+    // Sort by timestamp (newest first)
+    allFiles.sort((a, b) => b.timestamp - a.timestamp);
 
     res.json({
       success: true,
-      history: allFiles,  // Send all files for compatibility
-      sessions: sessions  // Send organized sessions
+      history: allFiles  // Send all organized files
     });
   } catch (error) {
     logger.error('file-storage', 'Failed to read history index', { error: error.message });
@@ -306,17 +311,38 @@ app.get('/api/history/index', (req, res) => {
 });
 
 // Load content from history
-app.get('/api/history/load/:filename', (req, res) => {
+app.get('/api/history/load/:id', (req, res) => {
   try {
-    const { filename } = req.params;
-    const filePath = path.join(HISTORY_DIR, filename);
+    const { id } = req.params;  // id is the filename from the index; we need to try different locations
     
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found' });
+    // First, try to find the file in the expected location (by looking through all subdirectories)
+    let filePath = null;
+    const items = fs.readdirSync(HISTORY_DIR);
+    
+    for (const item of items) {
+      const itemPath = path.join(HISTORY_DIR, item);
+      const stats = fs.statSync(itemPath);
+      
+      if (stats.isDirectory()) {
+        // If it's a directory, check if the file exists inside
+        const subItems = fs.readdirSync(itemPath);
+        if (subItems.includes(id)) {
+          filePath = path.join(itemPath, id);
+          break;
+        }
+      } else if (item === id) {
+        // If it's a direct file (for backward compatibility)
+        filePath = itemPath;
+        break;
+      }
     }
     
+    if (!filePath || !fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
     const content = fs.readFileSync(filePath, 'utf8');
-    
+
     res.json({
       success: true,
       content: JSON.parse(content)
@@ -351,6 +377,49 @@ app.get('/api/history/download/:filename', (req, res) => {
     });
   } catch (error) {
     logger.error('file-storage', 'Failed to download history file', { error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Clear all history entries (including organized folders)
+app.delete('/api/history/clear', (req, res) => {
+  try {
+    // Read all items in the history directory
+    const items = fs.readdirSync(HISTORY_DIR);
+    
+    for (const item of items) {
+      const itemPath = path.join(HISTORY_DIR, item);
+      const stats = fs.statSync(itemPath);
+      
+      if (stats.isDirectory()) {
+        // If it's a directory (organized by query), recursively delete its contents
+        const subItems = fs.readdirSync(itemPath);
+        for (const subItem of subItems) {
+          if (subItem.endsWith('.json')) {
+            const subFilePath = path.join(itemPath, subItem);
+            fs.unlinkSync(subFilePath);  // Remove the file
+            logger.info('file-storage', `Deleted history file: ${subFilePath}`);
+          }
+        }
+        // Remove the empty directory
+        fs.rmdirSync(itemPath);
+        logger.info('file-storage', `Deleted history directory: ${itemPath}`);
+      } else if (item.endsWith('.json')) {
+        // If it's a direct file, delete it
+        fs.unlinkSync(itemPath);  // Remove the file
+        logger.info('file-storage', `Deleted history file: ${itemPath}`);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Cleared all history files and directories`
+    });
+  } catch (error) {
+    logger.error('file-storage', 'Failed to clear history', { error: error.message });
     res.status(500).json({
       success: false,
       error: error.message
