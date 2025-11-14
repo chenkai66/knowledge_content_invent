@@ -38,7 +38,9 @@ export class ContentGenerationService {
     // Save to history folder - organize by original query/topic with timestamp
     // Use the exact user input from config.topic as the basis for folder naming
     const timestamp = Date.now();
-    const timestampStr = new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
+    const date = new Date(timestamp);
+    const timestampStr = 
+      `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
     const queryWithTimestamp = config.topic ? `${this.sanitizeFileName(config.topic)}-${timestampStr}` : `untitled-${timestampStr}`;
     
     // Set the global query context to ensure all subsequent LLM calls use this same folder
@@ -61,7 +63,9 @@ export class ContentGenerationService {
   async generateContent(config: ContentGenerationConfig): Promise<GeneratedContent> {
     // Set the query context with timestamp using the original topic before any LLM calls happen
     const timestamp = Date.now();
-    const timestampStr = new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
+    const date = new Date(timestamp);
+    const timestampStr = 
+      `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
     const queryWithTimestamp = config.topic ? `${this.sanitizeFileName(config.topic)}-${timestampStr}` : `untitled-${timestampStr}`;
     TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
     

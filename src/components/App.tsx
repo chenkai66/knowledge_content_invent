@@ -58,6 +58,7 @@ export const App: React.FC = () => {
   const [showTaskLogs, setShowTaskLogs] = React.useState(false); // State for merged task logs
   const [showTaskDashboard, setShowTaskDashboard] = React.useState(false); // State for task dashboard
   const [showQueryBasedHistory, setShowQueryBasedHistory] = React.useState(false); // State for query-based history viewer
+  const [fromHistory, setFromHistory] = React.useState(false); // Track if content is from history
 
   // Effect to track progress
   React.useEffect(() => {
@@ -135,7 +136,8 @@ export const App: React.FC = () => {
           setGeneratedContent(validatedContent);
         }
         
-        setShowHistory(false); // Close the history viewer after loading
+        setShowQueryBasedHistory(false); // Close the history viewer after loading
+        setFromHistory(true); // Mark that this content is from history
         return;
       } 
       
@@ -162,9 +164,10 @@ export const App: React.FC = () => {
         } else {
           // Only update the main content if no generation is in progress
           setGeneratedContent(contentWithPrompt);
+          setFromHistory(true); // Mark that this content is from history
         }
         
-        setShowHistory(false); // Close the history viewer after loading
+        setShowQueryBasedHistory(false); // Close the history viewer after loading
         return;
       }
       
@@ -197,8 +200,14 @@ export const App: React.FC = () => {
           generationSteps: [],
           progress: []
         });
+        setFromHistory(true); // Mark that this content is from history (even if error)
       }
     }
+  
+  const returnToInitial = () => {
+    setGeneratedContent(null);
+    setFromHistory(false);
+  };
   };
 
   return (
@@ -227,12 +236,21 @@ export const App: React.FC = () => {
           </div>
         ) : (
           // Show output section full-width when content is generated
-          <main className="output-section full-width">
-            <ContentViewer
-              content={generatedContent}
-              onDetailClick={handleDetailClick}
-            />
-          </main>
+          <div className="output-section-container">
+            {fromHistory && (
+              <div className="history-navigation-controls">
+                <button className="nav-btn return-btn" onClick={returnToInitial}>
+                  ← 返回初始页面
+                </button>
+              </div>
+            )}
+            <main className="output-section full-width">
+              <ContentViewer
+                content={generatedContent}
+                onDetailClick={handleDetailClick}
+              />
+            </main>
+          </div>
         )}
         
         {/* Empty placeholder to maintain layout structure if no content is available */}
@@ -291,6 +309,56 @@ export const App: React.FC = () => {
           onClose={() => setShowTaskDashboard(false)}
         />
       )}
+
+      <style jsx>{`
+        .output-section-container {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        }
+        
+        .history-navigation-controls {
+          padding: 0.5rem;
+          background: rgba(30, 41, 59, 0.95);
+          border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+        }
+        
+        .nav-btn {
+          padding: 0.4rem 0.8rem;
+          border: 1px solid rgba(148, 163, 184, 0.5);
+          background: rgba(51, 65, 85, 0.7);
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          color: #cbd5e1;
+          text-decoration: none;
+        }
+        
+        .nav-btn:hover {
+          background: rgba(71, 85, 105, 0.9);
+          border-color: rgba(165, 180, 252, 0.6);
+          color: #f8fafc;
+        }
+        
+        .return-btn {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .return-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+          background: linear-gradient(135deg, #2563eb, #1e40af);
+        }
+      `}</style>
     </div>
   );
 };

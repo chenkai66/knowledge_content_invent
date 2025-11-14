@@ -60,6 +60,23 @@ export const QueryBasedHistoryViewer: React.FC<QueryBasedHistoryViewerProps> = (
         }
         return newSet;
       });
+      
+      // When a query folder is clicked (but not expanded), load the main content
+      // from that folder by finding the most relevant file (with the best title)
+      if (!expandedQueryFolders.has(folderId)) {
+        const folder = sessions.find(s => s.id === folderId);
+        if (folder && folder.tasks.length > 0) {
+          // Find the task that seems to be the main content (not starting with prompt_ and has meaningful title)
+          const mainTask = folder.tasks.find(task => 
+            !task.title.startsWith('prompt_') && 
+            task.title.length > 0
+          ) || folder.tasks[0]; // Fallback to first task if no obvious main content found
+          
+          if (mainTask && onItemSelect) {
+            onItemSelect(mainTask.id);
+          }
+        }
+      }
     }
   };
 

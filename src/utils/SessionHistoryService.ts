@@ -32,18 +32,27 @@ export class SessionHistoryService {
           }
         });
 
-        // Convert to Session format
-        const organizedSessions: Session[] = Object.entries(groupedByQuery).map(([folder, items]) => ({
-          id: folder,
-          title: queryTitles[folder] || folder,
-          startTime: Math.min(...items.map((item: any) => item.timestamp)),
-          endTime: Math.max(...items.map((item: any) => item.timestamp)),
-          tasks: items.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            timestamp: item.timestamp
-          }))
-        }));
+        // Convert to Session format - extract the original query from the folder name by removing timestamp part
+        const organizedSessions: Session[] = Object.entries(groupedByQuery).map(([folder, items]) => {
+          // Extract the original query by removing the timestamp part (last 14 characters: YYYYMMDDHHMMSS)
+          // e.g., "信号传输-20251114135722" -> "信号传输"
+          let displayTitle = folder;
+          if (folder.length > 14 && /^\d{14}$/.test(folder.slice(-14))) {
+            displayTitle = folder.slice(0, -15); // Remove dash and timestamp
+          }
+          
+          return {
+            id: folder, // Keep the full folder name as ID so files can be found
+            title: queryTitles[folder] || displayTitle, // Use original query as title
+            startTime: Math.min(...items.map((item: any) => item.timestamp)),
+            endTime: Math.max(...items.map((item: any) => item.timestamp)),
+            tasks: items.map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              timestamp: item.timestamp
+            }))
+          };
+        });
 
         // Sort sessions by most recent
         organizedSessions.sort((a, b) => b.startTime - a.startTime);

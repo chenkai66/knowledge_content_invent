@@ -6,7 +6,7 @@ echo "Starting Knowledge Content Generation Application..."
 # Start the backend server in the background
 echo "Starting backend server on port 4000..."
 cd /Users/kchen/Desktop/Project/knowledge_content_invent/backend
-node minimal_server.js > backend.log 2>&1 &
+node server.js > backend.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend server started with PID: $BACKEND_PID"
 

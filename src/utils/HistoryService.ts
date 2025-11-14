@@ -16,7 +16,10 @@ export class HistoryService {
   static async saveToHistory(content: GeneratedContent, originalQuery?: string, timestamp?: number): Promise<void> {
     try {
       // Format timestamp as YYYYMMDDHHMMSS if provided
-      const timestampStr = timestamp ? new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2) : '';
+      const date = new Date(timestamp);
+      const timestampStr = timestamp ? 
+        `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}` 
+        : '';
       // Create query folder name with timestamp: "query-timestamp"
       const queryWithTimestamp = originalQuery && timestampStr 
         ? `${this.sanitizeFileName(originalQuery)}-${timestampStr}` 
