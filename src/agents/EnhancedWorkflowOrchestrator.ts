@@ -7,6 +7,7 @@ import { SearchService } from '../utils/SearchService';
 import { LocalStorageService } from '../utils/LocalStorageService';
 import { PROMPTS } from '../prompts/prompts';
 import { ParallelSectionProcessor } from '../utils/ParallelSectionProcessor';
+import { TaskContext } from '../utils/TaskContext';
 
 export interface SearchResult {
   id: string;
@@ -35,6 +36,12 @@ export class EnhancedWorkflowOrchestrator {
   }
 
   async executeFullWorkflow(userInput: string, enableKeywordExtraction: boolean = true): Promise<GeneratedContent> {
+    // Set the query context with timestamp before any LLM calls happen
+    const workflowTimestamp = Date.now();
+    const timestampStr = new Date(workflowTimestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
+    const queryWithTimestamp = userInput ? `${this.sanitizeFileName(userInput)}-${timestampStr}` : `untitled-${timestampStr}`;
+    TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
+    
     logger.info('workflow-orchestrator', `Starting enhanced workflow for input: ${userInput.substring(0, 100)}...`);
     // Increase the total steps to allow for more granular progress tracking
     // The actual workflow is much more complex than the initial estimate of 6 steps
@@ -118,6 +125,10 @@ export class EnhancedWorkflowOrchestrator {
     };
 
     logger.info('workflow-orchestrator', `Enhanced workflow completed for input: ${userInput.substring(0, 50)}...`);
+    
+    // Clear the query context after workflow completion
+    TaskContext.setCurrentQueryWithTimestamp(null);
+    
     return generatedContent;
   }
 
@@ -812,6 +823,13 @@ private async rewritePrompt(userInput: string): Promise<{rewrittenPrompt: string
 
   private generateId(): string {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+  }
+
+  private sanitizeFileName(fileName: string): string {
+    // Remove special characters that might cause issues in filenames
+    return fileName
+      .replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_') // Replace special characters with underscore
+      .substring(0, 100); // Limit length
   }
 
   private delay(ms: number): Promise<void> {
