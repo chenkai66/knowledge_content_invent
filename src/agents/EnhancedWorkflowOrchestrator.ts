@@ -36,12 +36,6 @@ export class EnhancedWorkflowOrchestrator {
   }
 
   async executeFullWorkflow(userInput: string, enableKeywordExtraction: boolean = true): Promise<GeneratedContent> {
-    // Set the query context with timestamp before any LLM calls happen
-    const workflowTimestamp = Date.now();
-    const timestampStr = new Date(workflowTimestamp).toISOString().replace(/[-:]/g, '').replace(/\..+/, '').substring(2);
-    const queryWithTimestamp = userInput ? `${this.sanitizeFileName(userInput)}-${timestampStr}` : `untitled-${timestampStr}`;
-    TaskContext.setCurrentQueryWithTimestamp(queryWithTimestamp);
-    
     logger.info('workflow-orchestrator', `Starting enhanced workflow for input: ${userInput.substring(0, 100)}...`);
     // Increase the total steps to allow for more granular progress tracking
     // The actual workflow is much more complex than the initial estimate of 6 steps
@@ -125,10 +119,6 @@ export class EnhancedWorkflowOrchestrator {
     };
 
     logger.info('workflow-orchestrator', `Enhanced workflow completed for input: ${userInput.substring(0, 50)}...`);
-    
-    // Clear the query context after workflow completion
-    TaskContext.setCurrentQueryWithTimestamp(null);
-    
     return generatedContent;
   }
 
