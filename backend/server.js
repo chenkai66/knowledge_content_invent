@@ -198,7 +198,10 @@ app.post('/api/history/save', (req, res) => {
     }
 
     // Use the original query as the directory name if provided and not empty, otherwise use the title
-    const directoryName = (query && query.trim() ? query : (title || 'untitled')).replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50);
+    // Skip using titles that start with 'prompt_' to avoid using prompt text as folder names
+    const directoryName = (query && query.trim() ? query : 
+                          (title && !title.startsWith('prompt_')) ? title : 
+                          `untitled_${Date.now()}`).replace(/[^a-zA-Z0-9\u4e00-\u9fa5\-_]/g, '_').substring(0, 50);
     const dirPath = path.join(HISTORY_DIR, directoryName);
 
     // Create directory if it doesn't exist
